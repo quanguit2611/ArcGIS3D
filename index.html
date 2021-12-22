@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport"
+            content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+        <title>Sân vận động Quốc gia Mỹ Đình</title>
+        
+        <style>
+            html, body {
+                padding: 0;
+                margin: 0;
+                height: 100%;
+                width: 100%;
+                scroll-behavior: smooth;
+                background: url('data_old/body-bg.jpg');
+                background-repeat: no-repeat;
+                background-size: cover;
+                background-attachment: fixed;
+
+            }
+
+            #viewDiv {
+                padding: 0;
+                margin: 0 auto 0.5rem;
+                height: 100%;
+                width: 100%;
+                border-top: 4px double black;
+                border-right: 2px dashed black;
+                border-bottom: 4px double black;
+                border-left: 2px dashed black;
+                float:left;
+            }
+        </style>
+
+        <link rel="stylesheet" href="https://js.arcgis.com/4.16/esri/themes/light/main.css" />
+        <script src="https://js.arcgis.com/4.16/"></script>
+
+        <script>
+                require([
+                    "esri/Map",
+                    "esri/views/SceneView",
+                    "esri/layers/GeoJSONLayer",
+                    "esri/layers/SceneLayer", 
+                    "esri/layers/GraphicsLayer", 
+                    "esri/Graphic", "esri/request"
+                ], function (Map, SceneView, GeoJSONLayer, SceneLayer, GraphicsLayer, Graphic, esriRequest) {
+                    var createGraphic = function(data) {
+                        return new Graphic({
+                            geometry : data,
+                            symbol : data.symbol,
+                            attributes : data,
+                            popupTemplate : data.popupTemplate
+                        });
+                    };
+                    
+                    const json_options = {
+                        query : {
+                            f : "json"
+                        },
+                        responseType : "json"
+                    };
+
+                    // -------------------------------------------------- //
+                    // Vẽ các mặt tường của khán đài P1, P4
+                    esriRequest('data_new/mat_tuong_p1p4.json', json_options).then(function(response) {
+                        const graphicsLayer = new GraphicsLayer();
+                        console.log(response);
+                        response.data.forEach(function(data){
+                            graphicsLayer.add(createGraphic(data));
+                        });
+                        map.add(graphicsLayer);
+
+                    });
+
+                    // Vẽ các cửa chính ra vào P1, P4
+                    esriRequest('data_new/cua_ra_vao_p1p4.json', json_options).then(function(response) {
+                        const graphicsLayer = new GraphicsLayer();
+                        console.log(response);
+                        response.data.forEach(function(data){
+                            graphicsLayer.add(createGraphic(data));
+                        });
+                        map.add(graphicsLayer);
+
+                    });
+                   
+                    // Vẽ các cửa phụ ra vào khán đài
+                    esriRequest('data_new/cua_phu.json', json_options).then(function(response) {
+                        var graphicsLayer = new GraphicsLayer();
+                        console.log(response);
+                        response.data.forEach(function(data){
+                            graphicsLayer.add(createGraphic(data));
+                        });
+                        map.add(graphicsLayer);
+
+                    });
+
+                    // Vẽ bề mặt sân (surface) gồm cả đường pitch xung quanh
+                    esriRequest('data_new/be_mat_san.json', json_options).then(function(response) {
+                        var graphicsLayer = new GraphicsLayer();
+                        console.log(response);
+                        response.data.forEach(function(data){
+                            graphicsLayer.add(createGraphic(data));
+                        });
+                        map.add(graphicsLayer);
+
+                    });
+
+                    // Vẽ sân cỏ ở giữa
+                    esriRequest('data_new/san_co.json', json_options).then(function(response) {
+                        var graphicsLayer = new GraphicsLayer();
+                        console.log(response);
+                        response.data.forEach(function(data){
+                            graphicsLayer.add(createGraphic(data));
+                        });
+                        map.add(graphicsLayer);
+
+                    });
+
+                    // -------------------------------------------------- //
+                    // geojson Layer mặt sàn tầng trệt của P1 và P4 
+                    const geojsonLayerMatSan = new GeoJSONLayer({
+                        url: "data_new/mat_san_p1p4.geojson"
+                    });
+
+                    geojsonLayerMatSan.renderer = {
+                        type: "simple",
+                        symbol: {
+                            type: "polygon-3d",
+                            symbolLayers: [
+                                {
+                                    type: "extrude",
+                                    size: 1,
+                                    material: {
+                                        color: "#ffaa00" //  màu cam
+                                    }
+                                }
+                            ]
+                        }
+                    };
+                    
+                    // geojson Layer mặt sàn tầng 1 - 2 - 3 - 4 khán đài P1, P4
+                    const geojsonLayerTang = new GeoJSONLayer({
+                        url: "data_new/tang_p1p4.geojson"
+                    });
+
+                    geojsonLayerTang.renderer = {
+                        type: "simple",
+                        symbol: {
+                            type: "polygon-3d",
+                            symbolLayers: [
+                                {
+                                    type: "extrude",
+                                    size: 1,
+                                    material: {
+                                        color: "#ffaa00" // màu cam
+                                    }
+                                }
+                            ]
+                        }
+                    };
+                    
+                    // geojson Layer Cầu thang phía Bắc khán đài P1, P4
+                    const geojsonLayerCauThangBac = new GeoJSONLayer({
+                        url: "data_new/cau_thang_bac_p1p4.geojson"
+                    });
+
+                    geojsonLayerCauThangBac.renderer = {
+                        type: "simple",
+                        symbol: {
+                            type: "polygon-3d",
+                            symbolLayers: [
+                                {
+                                    type: "extrude",
+                                    size: 1,
+                                    material: {
+                                        color: "#B8E4F0" // màu xanh nhạt
+                                    }
+                                }
+                            ]
+                        }
+                    };
+
+                    // geojson Layer Cầu thang phía Nam khán đài P1, P4
+                    const geojsonLayerCauThangNam = new GeoJSONLayer({
+                        url: "data_new/cau_thang_nam_p1p4.geojson"
+                    });
+
+                    geojsonLayerCauThangNam.renderer = {
+                        type: "simple",
+                        symbol: {
+                            type: "polygon-3d",
+                            symbolLayers: [
+                                {
+                                    type: "extrude",
+                                    size: 1,
+                                    material: {
+                                        color: "#B8E4F0" // màu xanh nhạt
+                                    }
+                                }
+                            ]
+                        }
+                    };
+                    
+                    // geojson Layer dãy phòng giữa 2 cầu thang của khán đài P1, P4
+                    const geojsonLayerDayPhong = new GeoJSONLayer({
+                        url: "data_new/day_phong_giua_p1p4.geojson"
+                    });
+
+                    geojsonLayerDayPhong.renderer = {
+                        type: "simple",
+                        symbol: {
+                            type: "polygon-3d",
+                            symbolLayers: [
+                                {
+                                    type: "extrude",
+                                    size: 6,
+                                    material: {
+                                        color: "#e8e8cc" // màu trắng đục
+                                    }
+                                }
+                            ]
+                        }
+                    };
+
+                    // geojson Layer 2 block ở trung tâm khán đài P1, P4
+                    const geojsonLayerBlockTrungTam = new GeoJSONLayer({
+                        url: "data_new/block_trung_tam_p1p4.geojson"
+                    });
+
+                    geojsonLayerBlockTrungTam.renderer = {
+                        type: "simple",
+                        symbol: {
+                            type: "polygon-3d",
+                            symbolLayers: [
+                                {
+                                    type: "extrude",
+                                    size: 25.5,
+                                    material: {
+                                        color: "#fc997c" // màu hồng
+                                    }
+                                }
+                            ]
+                        }
+                    };
+
+                    // geojson layer cột bê tông 2 bên khu cầu thang khán đài P1, P4
+                    const geojsonLayerCotBeTongCauThang = new GeoJSONLayer({
+                        url: "data_new/cot_p1p4.geojson"
+                    });
+        
+
+                    geojsonLayerCotBeTongCauThang.renderer = {
+                        type: "simple",
+                        symbol: {
+                            type: "polygon-3d",
+                            symbolLayers: [
+                                {
+                                    type: "extrude",
+                                    size: 21,
+                                    material: {
+                                        color: "#ff0000" // màu đỏ
+                                    }
+                                }
+                            ]
+                        }
+                    };
+
+                    // geojson layer cột bê tông khu vực sảnh chính khán đài P1, P4
+                    // Thứ tự các cột bê tông sẽ đi theo hướng từ Bắc xuống Nam, bên ngoài trước bên trong sau
+                    // Chi tiết: 1  2  3  4     9   10  11  12
+                    //           5  6  7  8     13  14  15  16
+                    const geojsonLayerCotBeTongSanhChinh = new GeoJSONLayer({
+                        url: "data_new/cot_sanh_chinh_p1p4.geojson"
+                    });
+
+                    geojsonLayerCotBeTongSanhChinh.renderer = {
+                        type: "simple",
+                        symbol: {
+                            type: "polygon-3d",
+                            symbolLayers: [
+                            {
+                                type: "extrude",
+                                size: 16.5,
+                                material: {
+                                    color: "#ff0000" // màu đỏ
+                                }
+                            }
+                            ]
+                        }
+                    };
+
+                    // geojson layer khớp nối chữ V - chỗ giao giữa khán đài P1, P4 với mái che
+                    const geojsonLayerKhopNoiV = new GeoJSONLayer({
+                        url: "data_new/khop_noi_v.geojson"
+                    });
+
+                    geojsonLayerKhopNoiV.renderer = {
+                        type: "simple",
+                        symbol: {
+                            type: "polygon-3d",
+                            symbolLayers: [
+                                {
+                                    type: "extrude",
+                                    size: 1,
+                                    material: {
+                                        color: "#ff0000" // màu đỏ
+                                    }
+                                }
+                            ]
+                        }
+                    };
+
+                    // geojson layer khớp nối chữ I - chỗ giao giữa khán đài P1, P4 với mái che
+                    const geojsonLayerKhopNoiI = new GeoJSONLayer({
+                        url: "data_new/khop_noi_i.geojson"
+                    });
+
+                    geojsonLayerKhopNoiI.renderer = {
+                        type: "simple",
+                        symbol: {
+                            type: "polygon-3d",
+                            symbolLayers: [
+                                {
+                                    type: "extrude",
+                                    size: 4.5,
+                                    material: {
+                                        color: "#ff0000" // màu đỏ
+                                    }
+                                }
+                            ]
+                        }
+                    };
+
+                    // geojson layer dãy ghế khán đài P4 bên dưới mái che
+                    const geojsonLayerDayGheP1P4 = new GeoJSONLayer({
+                        url: "data_new/day_ghe_p1p4.geojson"
+                    });
+
+                    geojsonLayerDayGheP1P4.renderer = {
+                        type: "simple",
+                        symbol: {
+                            type: "polygon-3d",
+                            symbolLayers: [
+                                {
+                                    type: "extrude",
+                                    size: 1,
+                                    material: {
+                                        color: "#89CFF0" // màu xanh
+                                    }
+                                }
+                            ]
+                        }
+                    }
+
+                    // -------------------------------------------------- //
+                    // geojson layer mái che khán đài
+                    const geojsonLayerMaiChe = new GeoJSONLayer({
+                        url: "data_new/mai_che.geojson"
+                    });
+
+                    geojsonLayerMaiChe.renderer = {
+                        type: "simple",
+                        symbol: {
+                            type: "polygon-3d",
+                            symbolLayers: [
+                                {
+                                    type: "extrude",
+                                    size: 1,
+                                    material: {
+                                        color: "#0000ff" // màu xanh đậm
+                                    }
+                                }
+                            ]
+                        }
+                    }
+
+                    // geojson layer chi tiết vòng cung trên mỗi mái che
+                    const geojsonLayerChiTietMaiChe = new GeoJSONLayer({
+                        url: "data_new/chi_tiet_mai_che.geojson"
+                    });
+
+                    geojsonLayerChiTietMaiChe.renderer = {
+                        type: "simple",
+                        symbol: {
+                            type: "polygon-3d",
+                            symbolLayers: [
+                                {
+                                    type: "extrude",
+                                    size: 0.1,
+                                    material: {
+                                        color: "#90cf56"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+
+                    // geojson layer 4 trụ đèn
+                    const geojsonLayerTruDen = new GeoJSONLayer({
+                        url: "data_new/tru_den.geojson"
+                    });
+
+                    geojsonLayerTruDen.renderer = {
+                        type: "simple",
+                        symbol: {
+                            type: "polygon-3d",
+                            symbolLayers: [
+                                {
+                                    type: "extrude",
+                                    size: 70,
+                                    material: {
+                                        color: "#90cf56"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+
+                    // geojson layer đèn chiếu sáng
+                    const geojsonLayerDen = new GeoJSONLayer({
+                        url: "data_new/den_chieu.geojson"
+                    });
+
+                    geojsonLayerDen.renderer = {
+                        type: "simple",
+                        symbol: {
+                            type: "polygon-3d",
+                            symbolLayers: [
+                                {
+                                    type: "extrude",
+                                    size: 8,
+                                    material: {
+                                        color: "#f1cebb"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+
+                    // -------------------------------------------------- //
+                    // geojson layer dãy ghế khán đài ngoài trời P2, P3
+                    const geojsonLayerDayGheP2P3 = new GeoJSONLayer({
+                        url: "data_new/day_ghe_p2p3.geojson",
+                    });
+
+                    geojsonLayerDayGheP2P3.renderer = {
+                        type: "simple",
+                        symbol: {
+                            type: "polygon-3d",
+                            symbolLayers: [
+                                {
+                                    type: "extrude",
+                                    size: 1,
+                                    material: {
+                                    color: "#89CFF0",
+                                    },
+                                },
+                            ],
+                        },
+                    };
+
+                    // geojson layer lối đi khán đài ngoài trời
+                    const geojsonLayerLoiDiP2P3 = new GeoJSONLayer({
+                        url: "data_new/loi_di_p2p3.geojson",
+                    });
+                    geojsonLayerLoiDiP2P3.renderer = {
+                        type: "simple",
+                        symbol: {
+                            type: "polygon-3d",
+                            symbolLayers: [
+                                {
+                                    type: "extrude",
+                                    size: 6,
+                                    material: {
+                                    color: "#59c3c3",
+                                    },
+                                },
+                            ],
+                        },
+                    };
+
+                    // geojson layer cột bê tông khán đài ngoài trời P2, P3
+                    const geojsonLayerCotP2P3 = new GeoJSONLayer({
+                        url: "data_new/cot_p2p3.geojson",
+                    });
+                    geojsonLayerCotP2P3.renderer = {
+                        type: "simple",
+                        symbol: {
+                            type: "polygon-3d",
+                            symbolLayers: [
+                                {
+                                    type: "extrude",
+                                    size: 5,
+                                    material: {
+                                    color: "#ff0000",
+                                    },
+                                },
+                            ],
+                        },
+                    };
+                    // -------------------------------------------------- //
+                    // geojson layer mặt sàn tầng trệt khán đài ngoài trời P3
+                    const geojsonLayerMatSanP3 = new GeoJSONLayer({
+                        url: "data_old/p3_san.geojson"
+                    });
+
+                    geojsonLayerMatSanP3.renderer = {
+                        type: "simple",
+                        symbol: {
+                            type: "polygon-3d",
+                            symbolLayers: [
+                                {
+                                    type: "extrude",
+                                    size: 1,
+                                    material: {
+                                        color: "#c7af12"
+                                    }
+                                }
+                            ]
+                        }
+                    };
+
+                    // geojson layer cửa ra vào lớn khán đài P3 
+                    const geojsonLayerCuaVaoP3 = new GeoJSONLayer({
+                        url: "data_old/P3_cua_vao_san.geojson"
+                    });
+
+                    geojsonLayerCuaVaoP3.renderer = {
+                        type: "simple",
+                        symbol: {
+                            type: "polygon-3d",
+                            symbolLayers: [
+                                {
+                                    type: "extrude",
+                                    size: 10,
+                                    material: {
+                                        color: "#d142f5"
+                                    }
+                                }
+                            ]
+                        }
+                    };
+
+                    // geojson layer mặt sàn tầng 1 khán đài P3
+                    const geojsonLayerMatSanTangP3 = new GeoJSONLayer({
+                        url: "data_old/P3_san_tang1.geojson"
+                    });
+
+                    geojsonLayerMatSanTangP3.renderer = {
+                        type: "simple",
+                        symbol: {
+                            type: "polygon-3d",
+                            symbolLayers: [
+                                {
+                                    type: "extrude",
+                                    size: 1,
+                                    material: {
+                                        color: "#e5c2ed"
+                                    }
+                                }
+                            ]
+                        }
+                    };
+
+                    // geojson layer dãy ngăn cách khán đài P3 và đường pitch
+                    const geojsonLayerDayNganCachP3 = new GeoJSONLayer({
+                        url: "data_old/p3_day_ngan_cach.geojson"
+                    });
+
+                    geojsonLayerDayNganCachP3.renderer = {
+                        type: "simple",
+                        symbol: {
+                            type: "polygon-3d",
+                            symbolLayers: [
+                                {
+                                    type: "extrude",
+                                    size: 5,
+                                    material: {
+                                        color: "#e2dce3"
+                                    }
+                                }
+                            ]
+                        }
+                    };
+
+                    // geojson layer khối tường phía bên ngoài khán đài P3
+                    const geojsonLayerTuongBenNgoaiP3 = new GeoJSONLayer({
+                        url: "data_old/p3_tuong_ben_ngoai.geojson"
+                    });
+        
+
+                    geojsonLayerTuongBenNgoaiP3.renderer = {
+                        type: "simple",
+                        symbol: {
+                            type: "polygon-3d",
+                            symbolLayers: [
+                                {
+                                    type: "extrude",
+                                    size: 5,
+                                    material: {
+                                        color: "#d1cec5"
+                                    }
+                                }
+                            ]
+                        }
+                    };
+
+                    // geojson layer các cột bê tông khán đài P3
+                    const geojsonLayerCotP3 = new GeoJSONLayer({
+                        url: "data_old/p3_cot.geojson"
+                    });
+        
+
+                    geojsonLayerCotP3.renderer = {
+                        type: "simple",
+                        symbol: {
+                            type: "polygon-3d",
+                            symbolLayers: [
+                                {
+                                    type: "extrude",
+                                    size: 10,
+                                    material: {
+                                        color: "#f51800"
+                                    }
+                                }
+                            ]
+                        }
+                    };
+
+                    // -------------------------------------------------- //
+                    // Display on SceneView
+                    const map = new Map({
+                        basemap: "topo-vector",
+                        ground: "world-elevation",
+                        layers: [geojsonLayerMatSan, geojsonLayerTang, geojsonLayerCauThangBac, 
+                                geojsonLayerCauThangNam, geojsonLayerDayPhong, geojsonLayerBlockTrungTam,
+                                geojsonLayerCotBeTongCauThang, geojsonLayerCotBeTongSanhChinh, geojsonLayerKhopNoiV,
+                                geojsonLayerKhopNoiI, geojsonLayerDayGheP1P4, geojsonLayerMaiChe,
+                                geojsonLayerChiTietMaiChe, geojsonLayerTruDen, geojsonLayerDen,
+                                geojsonLayerDayGheP2P3, geojsonLayerLoiDiP2P3, geojsonLayerCotP2P3] //end layers
+                    });
+
+                    const view = new SceneView({
+                        container: "viewDiv",
+                        map: map,
+                        camera: {
+                            position: [105.7667003687724,21.020382052569758,40],
+                            heading: 270,
+                            tilt: 85
+                        }
+                    });
+
+                    //view.popup.defaultPopupTemplateEnabled = true;
+                });
+
+        </script>
+    </head>
+
+    <body>
+        <!-- ================== BODY CONTAINER ===================-->
+        <div id="viewDiv" class="viewDiv"></div>   
+    </body>
+</html>
